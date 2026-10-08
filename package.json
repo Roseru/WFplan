@@ -1,0 +1,1 @@
+{"name":"wfplan","version":"1.0.0","private":true,"type":"module","scripts":{"dev":"node serve.js","test":"node --test data.test.js","build":"node validate.js"}}
