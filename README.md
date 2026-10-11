@@ -10,7 +10,7 @@ Wymagany Node.js 22 lub nowszy. Brak zależności do instalowania.
 
 ```sh
 node serve.js
-node --test data.test.js
+node --test data.test.js map.test.js
 node validate.js
 ```
 
@@ -24,7 +24,7 @@ Adres lokalny: http://127.0.0.1:4173. Pliki aplikacji znajdują się w katalogu 
 - 165 opisów zajęć, pozyskanych z tabel programu (strony 12–52).
 - Kody `18/9`, `18/10`, `4/710`, `4/45`, `3/39` występują w rozkładzie, ale nie mają odpowiednika w przekazanym programie. Aplikacja zachowuje kod i pokazuje brak opisu.
 - Czas programowy jest sumą godzin dla punktu programu, a nie długością konkretnego spotkania. Źródło podaje numery bloków, ale nie godziny zegarowe. Eksport ICS używa wpisów całodniowych, które nie blokują dostępności.
-- Oznaczenia obiektów i wskazówki pochodzą z wytycznych zimowych 2026/27. Miejsca zbiórek z ilustracji nie są geokodowane.
+- Oznaczenia obiektów i wskazówki pochodzą z wytycznych zimowych 2026/27. Po najechaniu, kliknięciu lub przejściu klawiaturą na nazwę miejsca otwiera się schemat z zielonym zaznaczeniem. Wspólne oznaczenia (np. K/F) zachowują wspólny punkt z przesłanego schematu; nie jest to mapa GPS.
 - Brak automatycznej synchronizacji z SWF. Nieobecność wpisu nie oznacza odwołania zajęć.
 
 ## Aktualizacja danych
@@ -34,4 +34,5 @@ Adres lokalny: http://127.0.0.1:4173. Pliki aplikacji znajdują się w katalogu 
 ## Prywatność
 
 Wybór grupy jest zapisywany wyłącznie w lokalnej pamięci przeglądarki. Brak kont użytkowników, analityki i backendu. Czcionki są pobierane z Google Fonts; aplikacja działa również na czcionkach systemowych.
+
 
