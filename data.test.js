@@ -47,4 +47,6 @@ test('Only November 30 is marked as a methodical makeup session',()=>{
  assert.ok(output.includes('SUMMARY:WF · '+methodicalLabel+' · odrabianie · '));
  assert.ok(output.includes('DESCRIPTION:T-2/24. '+methodicalLabel+' · odrabianie. '));
  assert.match(output,/DTSTART;VALUE=DATE:20261130/);
+ assert.ok(output.includes('Doskonalenie biegu na orientację.'));
+ assert.ok(!output.includes('Trening ogólnousprawniający z wykorzystaniem gier i zabaw terenowych.'));
 });

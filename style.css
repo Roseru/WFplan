@@ -9,3 +9,5 @@
 .makeup-badge{border-color:#e6a0a0;background:#fff0f0;color:#9b2020}
 
 .event.makeup-event{border-left-color:#c04444}
+
+.event .original-topic,.next-card .original-topic{margin:0 0 8px;color:#8d938b;font-size:12px;font-weight:400;line-height:1.6}.original-topic s{text-decoration-thickness:1px;text-decoration-color:#afb4ad}.event h3.replacement-topic,.next-card h3.replacement-topic{color:#ad2929}
