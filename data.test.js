@@ -25,7 +25,9 @@ test('VII semester methodical markers cover the supplied codes and only the requ
  assert.equal(nov9.lesson,'2/32');
  const exported=ics([nov9],data).replace(/\r\n /g,'');
  assert.ok(exported.includes('SUMMARY:WF · '+methodicalLabel+' · '));
- assert.ok(exported.includes('DESCRIPTION:T-2/32. '+methodicalLabel+'. '));
+ assert.ok(exported.includes('DESCRIPTION:T-2/32. '+methodicalLabel+' · Nie odbyły się. '));
+ assert.ok(exported.includes('Trening ogólnousprawniający z wykorzystaniem gier i zabaw terenowych.'));
+ assert.ok(!exported.includes('Doskonalenie biegu na orientację.'));
  assert.match(exported,/DTSTART;VALUE=DATE:20261109/);
  const ordinary=actual.find(e=>e.date==='2026-12-11');
  assert.ok(!ics([ordinary],data).includes(methodicalLabel));

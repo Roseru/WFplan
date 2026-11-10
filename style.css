@@ -11,3 +11,5 @@
 .event.makeup-event{border-left-color:#c04444}
 
 .event .original-topic,.next-card .original-topic{margin:0 0 8px;color:#8d938b;font-size:12px;font-weight:400;line-height:1.6}.original-topic s{text-decoration-thickness:1px;text-decoration-color:#afb4ad}.event h3.replacement-topic,.next-card h3.replacement-topic{color:#ad2929}
+
+.event.replaced-event{border-left-color:#3679b8}.methodical-badge.replaced-badge{border-color:#a4c4e6;background:#edf5ff;color:#245f98}.original-topic.blue-original{color:#6d8bac}.original-topic.blue-original s{text-decoration-color:#9bb7d5}.event h3.replacement-topic.blue-replacement,.next-card h3.replacement-topic.blue-replacement{color:#245f98}
