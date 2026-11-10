@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
-import {addDays,monday,filterEvents,ics,isMethodicalEvent,methodicalLabel} from './logic.js';
+import {addDays,monday,filterEvents,ics,isMethodicalEvent,isMakeupEvent,methodicalLabel} from './logic.js';
 const data=JSON.parse(fs.readFileSync(new URL('./data.json',import.meta.url)));
 test('Reference example: 4pl/23kp, Friday 9 October 2026',()=>{const events=filterEvents(data.events,{semester:'winter-2026',company:23,platoon:4});const e=events.find(e=>e.date==='2026-10-09');assert.equal(e.code,'O-2/33');assert.equal(e.cell,'F413');assert.equal(e.block,'3–4');assert.equal(e.instructor,'PS');assert.equal(data.lessons[e.lesson].page,15);assert.equal(data.lessons[e.lesson].hours,2);assert.equal(data.lessons[e.lesson].type,'instruktorsko-metodyczne');assert.equal(data.lessons[e.lesson].title,'Doskonalenie umiejętności indywidualnego pokonywania toru przeszkód w OSF.');});
 test('Summer archive keeps 2026 dates, no fabricated 2027 summer',()=>{const summer=data.events.filter(e=>e.semester==='summer-2026');assert.ok(summer.length>1000);assert.ok(summer.every(e=>e.date.startsWith('2026-')));assert.equal(data.events.filter(e=>e.semester==='summer-2027').length,0);assert.ok(data.semesters.find(s=>s.id==='summer-2027').warning);});
@@ -20,13 +20,31 @@ test('VII semester methodical markers cover the supplied codes and only the requ
  }
  assert.equal(isMethodicalEvent({semester:'winter-2026',company:23,platoon:4,lesson:'2/24'}),false);
  const actual=filterEvents(data.events,{semester:'winter-2026',company:23,platoon:4});
- assert.equal(actual.filter(isMethodicalEvent).length,6);
+ assert.equal(actual.filter(isMethodicalEvent).length,7);
  const nov9=actual.find(e=>e.date==='2026-11-09');
  assert.equal(nov9.lesson,'2/32');
  const exported=ics([nov9],data).replace(/\r\n /g,'');
  assert.ok(exported.includes('SUMMARY:WF · '+methodicalLabel+' · '));
  assert.ok(exported.includes('DESCRIPTION:T-2/32. '+methodicalLabel+'. '));
  assert.match(exported,/DTSTART;VALUE=DATE:20261109/);
- const ordinary=actual.find(e=>e.lesson==='2/24');
+ const ordinary=actual.find(e=>e.date==='2026-12-11');
  assert.ok(!ics([ordinary],data).includes(methodicalLabel));
+});
+
+test('Only November 30 is marked as a methodical makeup session',()=>{
+ const group=filterEvents(data.events,{semester:'winter-2026',company:23,platoon:4});
+ const makeup=group.find(e=>e.date==='2026-11-30');
+ assert.equal(makeup.lesson,'2/24');
+ assert.equal(isMakeupEvent(makeup),true);
+ assert.equal(isMethodicalEvent(makeup),true);
+ assert.deepEqual(group.filter(isMakeupEvent).map(e=>e.date),['2026-11-30']);
+ for(const e of group.filter(e=>e.lesson==='2/24'&&e.date!=='2026-11-30'))assert.equal(isMethodicalEvent(e),false);
+ assert.equal(isMakeupEvent({...makeup,platoon:3}),false);
+ assert.equal(isMakeupEvent({...makeup,company:22}),false);
+ assert.equal(isMakeupEvent({...makeup,semester:'summer-2026'}),false);
+ assert.equal(isMakeupEvent(group.find(e=>e.date==='2026-11-09')),false);
+ const output=ics([makeup],data).replace(/\r\n /g,'');
+ assert.ok(output.includes('SUMMARY:WF · '+methodicalLabel+' · odrabianie · '));
+ assert.ok(output.includes('DESCRIPTION:T-2/24. '+methodicalLabel+' · odrabianie. '));
+ assert.match(output,/DTSTART;VALUE=DATE:20261130/);
 });
