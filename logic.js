@@ -11,6 +11,7 @@ export const replacementTitle='Trening ogólnousprawniający z wykorzystaniem gi
 export function isMakeupEvent(e){return isTargetGroup(e)&&e.date==='2026-11-30'&&e.lesson==='2/24';}
 export function isMethodicalEvent(e){return isTargetCompany(e)&&(methodicalLessons.has(e.lesson)||isMakeupEvent(e));}
 export function nextMethodicalEvent(events,fromDate){return events.find(e=>e.date>=fromDate&&isMethodicalEvent(e)&&!isReplacedEvent(e));}
+export function methodicalWarning(event,fromDate){if(!event)return null;const days=(Date.parse(event.date+'T00:00:00Z')-Date.parse(fromDate+'T00:00:00Z'))/86400000;if(!Number.isFinite(days)||days<0||days>7)return null;return {level:days<=2?'danger':'warning',days};}
 export const makeupTitle='Doskonalenie biegu na orientację.';
 export const methodicalLabel='Zajęcia instruktorsko-metodyczne';
 export const methodicalEventLabel=e=>methodicalLabel+(isMakeupEvent(e)?' · odrabianie':isReplacedEvent(e)?' · Nie odbyły się':'');

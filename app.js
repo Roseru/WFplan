@@ -1,6 +1,6 @@
 import {locationButton,setupLocationMap} from './location-map.js';
 const closeLocationMap=setupLocationMap();
-import {iso,addDays,monday,filterEvents,ics,isMethodicalEvent,isMakeupEvent,isReplacedEvent,methodicalEventLabel,makeupTitle,replacementTitle,nextMethodicalEvent} from './logic.js?v=20261112-next-methodical';
+import {iso,addDays,monday,filterEvents,ics,isMethodicalEvent,isMakeupEvent,isReplacedEvent,methodicalEventLabel,makeupTitle,replacementTitle,nextMethodicalEvent,methodicalWarning} from './logic.js?v=20261112-im-warnings';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const dateObj=s=>new Date(s+'T12:00:00');
@@ -50,8 +50,10 @@ function render(){
  const upcoming=all.find(e=>e.date>=today);
  $('upcoming').innerHTML=upcoming?`<p class="next-date">${esc(format(upcoming.date,{weekday:'long',day:'numeric',month:'long'}))} · blok ${esc(upcoming.block)}</p>${methodicalBadge(upcoming)}${eventHeading(upcoming)}<div class="location">${locationButton(upcoming.location,place(upcoming))}</div><button id="goto-upcoming">Zobacz w planie <span>→</span></button>`:'<h3>Brak kolejnych zajęć</h3><p class="location">W wybranym semestrze nie ma przyszłych wpisów dla tej grupy.</p>';
  if($('goto-upcoming'))$('goto-upcoming').onclick=()=>{day=upcoming.date;render();};
- const methodical=nextMethodicalEvent(all,today);
- $('upcoming-methodical').innerHTML=methodical?`<p class="next-date">${esc(format(methodical.date,{weekday:'long',day:'numeric',month:'long',year:'numeric'}))} · blok ${esc(methodical.block)}</p><p class="methodical-next-code">${esc(methodical.code)}</p>${isMakeupEvent(methodical)?methodicalBadge(methodical):''}${eventHeading(methodical)}<div class="location">${locationButton(methodical.location,place(methodical))}</div><button id="goto-methodical" aria-label="Zobacz zajęcia instruktorsko-metodyczne w planie">Zobacz w planie <span>→</span></button>`:'<h3>Brak kolejnych zajęć</h3><p class="location">W wybranym semestrze nie ma kolejnych oznaczonych zajęć instruktorsko-metodycznych dla tej grupy.</p>';
+ const methodical=nextMethodicalEvent(all,today),methodicalAlert=methodicalWarning(methodical,today);
+ $('methodical-next-card').className='next-card methodical-next-card'+(methodicalAlert?' methodical-'+methodicalAlert.level+'-state':'');
+ const methodicalAlertText=methodicalAlert?(methodicalAlert.days===0?'Dzisiaj':methodicalAlert.days===1?'Już jutro':methodicalAlert.days===2?'Już za 2 dni':`Niedługo — za ${methodicalAlert.days} dni`):'';
+ $('upcoming-methodical').innerHTML=methodical?`${methodicalAlert?`<p class="methodical-warning"><span aria-hidden="true">⚠</span> ${esc(methodicalAlertText)}</p>`:''}<p class="next-date">${esc(format(methodical.date,{weekday:'long',day:'numeric',month:'long',year:'numeric'}))} · blok ${esc(methodical.block)}</p><p class="methodical-next-code">${esc(methodical.code)}</p>${isMakeupEvent(methodical)?methodicalBadge(methodical):''}${eventHeading(methodical)}<div class="location">${locationButton(methodical.location,place(methodical))}</div><button id="goto-methodical" aria-label="Zobacz zajęcia instruktorsko-metodyczne w planie">Zobacz w planie <span>→</span></button>`:'<h3>Brak kolejnych zajęć</h3><p class="location">W wybranym semestrze nie ma kolejnych oznaczonych zajęć instruktorsko-metodycznych dla tej grupy.</p>';
  if($('goto-methodical'))$('goto-methodical').onclick=()=>{day=methodical.date;render();};
  const outdoors=onDay.some(e=>data.locations[e.location]?.outdoor);
  $('tip-title').textContent=onDay.length?(outdoors?'Zajęcia w terenie':'Zabierz obuwie zmienne'):'Przygotuj się do WF-u';
