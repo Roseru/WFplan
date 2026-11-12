@@ -1,0 +1,1 @@
+{"name":"wfplan-push","private":true,"type":"module","scripts":{"deploy":"wrangler deploy","dev":"wrangler dev","test":"node --test worker.test.js"},"dependencies":{"@block65/webcrypto-web-push":"2.0.0"},"devDependencies":{"wrangler":"4.119.0"}}

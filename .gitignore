@@ -1,3 +1,8 @@
 __pycache__/
 import-report.json
 node_modules/
+
+.wrangler/
+.dev.vars*
+.env*
+push/.secrets*
