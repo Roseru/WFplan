@@ -1,9 +1,9 @@
-import {setupNotifications} from './notifications.js?v=20261112-push';
+import {setupNotifications} from './notifications.js?v=20261112-push2';
 import {blockStart} from './notification-logic.js';
 const notifications=setupNotifications();
 import {locationButton,setupLocationMap} from './location-map.js';
 const closeLocationMap=setupLocationMap();
-import {iso,addDays,monday,filterEvents,ics,isMethodicalEvent,isMakeupEvent,isReplacedEvent,methodicalEventLabel,makeupTitle,replacementTitle,nextMethodicalEvent,methodicalWarning} from './logic.js?v=20261112-push';
+import {iso,addDays,monday,filterEvents,ics,isMethodicalEvent,isMakeupEvent,isReplacedEvent,methodicalEventLabel,makeupTitle,replacementTitle,nextMethodicalEvent,methodicalWarning} from './logic.js?v=20261112-push2';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const dateObj=s=>new Date(s+'T12:00:00');

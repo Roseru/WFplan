@@ -17,15 +17,16 @@ export function validateSelection(s){
  const events=data.events.filter(e=>e.semester===out.semester&&e.company===out.company&&e.platoon===out.platoon);
  if(!events.length||out.subgroup.length>20||(out.subgroup&&!events.some(e=>e.subgroup===out.subgroup)))throw Error('Brak rozkładu dla tej grupy.');return out;
 }
-function ready(env){return Boolean(env.DB&&env.VAPID_PUBLIC_KEY&&env.VAPID_PRIVATE_KEY&&env.DISPATCH_SECRET);}
+function ready(env){return Boolean(env.DB&&env.VAPID_PUBLIC_KEY&&env.VAPID_PRIVATE_KEY&&env.DISPATCH_SECRET&&env.SERVICE_URL);}
 async function replaceJobs(env,id,selection,settings,now=Date.now()){
  const jobs=buildSchedule(data,selection,settings,now).map(j=>({id:id+'|'+j.key,subscriber:id,due:j.due,starts:j.starts,payload:JSON.stringify(j.payload)}));
  return [env.DB.prepare("DELETE FROM jobs WHERE subscriber=? AND state='pending'").bind(id),env.DB.prepare("INSERT OR IGNORE INTO jobs(id,subscriber,due,starts,payload) SELECT json_extract(value,'$.id'),json_extract(value,'$.subscriber'),json_extract(value,'$.due'),json_extract(value,'$.starts'),json_extract(value,'$.payload') FROM json_each(?)").bind(JSON.stringify(jobs))];
 }
 async function remove(env,id){await env.DB.batch([env.DB.prepare('DELETE FROM jobs WHERE subscriber=?').bind(id),env.DB.prepare('DELETE FROM subscriptions WHERE id=?').bind(id)]);}
 async function send(env,subscription,payload,ttl){
- const init=await buildPushPayload({data:JSON.stringify(payload),options:{ttl:Math.max(0,Math.min(900,ttl))}},{...subscription},{subject:env.VAPID_SUBJECT,publicKey:env.VAPID_PUBLIC_KEY,privateKey:env.VAPID_PRIVATE_KEY});
- return fetch(subscription.endpoint,{...init,redirect:'error',signal:AbortSignal.timeout(15000)});
+ let init;
+ try{init=await buildPushPayload({data:JSON.stringify(payload),options:{ttl:Math.max(0,Math.min(900,ttl))}},{...subscription},{subject:env.VAPID_SUBJECT,publicKey:env.VAPID_PUBLIC_KEY,privateKey:env.VAPID_PRIVATE_KEY});}catch(error){throw Error('Encryption '+error.name);}
+ try{return await fetch(subscription.endpoint,{...init,redirect:'manual',signal:AbortSignal.timeout(15000)});}catch(error){throw Error('Delivery '+error.name+': '+String(error.message).replace(/https?:\/\/[^\s)]+/g,'[URL]').replace(/[A-Za-z0-9_+/=-]{24,}/g,'[redacted]').slice(0,200));}
 }
 async function dispatch(env,id){
  const now=Date.now();
@@ -37,8 +38,8 @@ async function dispatch(env,id){
   const response=await send(env,JSON.parse(sub.subscription),JSON.parse(job.payload),Math.floor(Math.min(job.starts-now,900000)/1000));
   if(response.status===404||response.status===410){await remove(env,job.subscriber);return;}
   if(response.ok){await env.DB.prepare("UPDATE jobs SET state='sent',sent=? WHERE id=?").bind(Date.now(),id).run();return;}
-  if(response.status>=400&&response.status<500&&response.status!==429){await env.DB.prepare("UPDATE jobs SET state='failed' WHERE id=?").bind(id).run();console.error('Push rejected',response.status);return;}
- }catch{console.error('Push transport retry');}
+  if(response.status>=300&&response.status<500&&response.status!==429){await env.DB.prepare("UPDATE jobs SET state='failed' WHERE id=?").bind(id).run();console.error('Push rejected',response.status);return;}
+ }catch(error){console.error('Push transport retry',error.message);}
  // The original due date is retained for the stale-message cutoff; lease controls backoff.
  await env.DB.prepare("UPDATE jobs SET state='sending',lease=? WHERE id=?").bind(now+Math.min(300000,60000*job.attempts),id).run();
 }
@@ -70,7 +71,8 @@ export default {
     if(!existing)return reply({error:'Najpierw włącz i zapisz powiadomienia.'},404);
     const allowed=await env.DB.prepare('UPDATE subscriptions SET last_test=? WHERE id=? AND last_test<? RETURNING id').bind(Date.now(),id,Date.now()-60000).first();
     if(!allowed)return reply({error:'Kolejny test możesz wysłać za minutę.'},429);
-    const response=await send(env,JSON.parse(existing.subscription),{title:'WFplan — powiadomienia działają',body:'Otrzymasz przypomnienia dla wybranej grupy i ustawionych wyprzedzeń.',url:env.APP_ORIGIN+'/',tag:'wfplan-test'},60);
+    let response;
+    try{response=await send(env,JSON.parse(existing.subscription),{title:'WFplan — powiadomienia działają',body:'Otrzymasz przypomnienia dla wybranej grupy i ustawionych wyprzedzeń.',url:env.APP_ORIGIN+'/',tag:'wfplan-test'},60);}catch(error){console.error('Push test failed',error.message);return reply({error:'Nie udało się wysłać testu. Spróbuj ponownie za minutę.'},502);}
     if(response.status===404||response.status===410){await remove(env,id);return reply({error:'Subskrypcja wygasła. Wyłącz i ponownie włącz powiadomienia.'},410);}
     if(!response.ok)return reply({error:'Usługa push nie przyjęła testu. Spróbuj później.'},502);return reply({ok:true});
    }

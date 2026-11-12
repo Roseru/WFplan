@@ -44,7 +44,7 @@ test('Real RFC8291 payload decrypts and VAPID signature verifies; test limited t
  const f=fixture();await f.call('PUT',{subscription:f.subscription,settings:f.settings,selection:f.selection});
  const original=globalThis.fetch;let calls=0;
  globalThis.fetch=async(url,init)=>{
-  assert.equal(url,f.subscription.endpoint);calls++;const payload=decrypt(f,init);assert.equal(payload.title,'WFplan — powiadomienia działają');assert.equal(init.headers['content-encoding'],'aes128gcm');
+  assert.equal(url,f.subscription.endpoint);assert.equal(init.redirect,'manual');calls++;const payload=decrypt(f,init);assert.equal(payload.title,'WFplan — powiadomienia działają');assert.equal(init.headers['content-encoding'],'aes128gcm');
   const [,jwt]=init.headers.authorization.match(/t=([^,]+)/),[header,claims,signature]=jwt.split('.');const publicBytes=f.vapid.getPublicKey();
   const key=createPublicKey({key:{kty:'EC',crv:'P-256',x:publicBytes.subarray(1,33).toString('base64url'),y:publicBytes.subarray(33).toString('base64url')},format:'jwk'});
   assert.ok(verify('sha256',Buffer.from(header+'.'+claims),{key,dsaEncoding:'ieee-p1363'},Buffer.from(signature,'base64url')));const claim=JSON.parse(Buffer.from(claims,'base64url'));assert.equal(claim.aud,'https://fcm.googleapis.com');assert.equal(claim.sub,f.env.VAPID_SUBJECT);return new Response(null,{status:201});

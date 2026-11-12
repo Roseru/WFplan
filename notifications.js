@@ -88,7 +88,7 @@ export function setupNotifications(){
  $('notification-test').onclick=async()=>{if(busy)return;try{busy=true;$('notification-test').disabled=true;status('Wysyłanie powiadomienia testowego…');await api(endpoint()+'/test','POST');status('Test został wysłany. Sprawdź powiadomienia urządzenia.');}catch(e){status(e.message,true);}finally{busy=false;$('notification-test').disabled=!state.settings.enabled;}};
  let pendingSync=Promise.resolve();
  function updateSelection(next,source){
-  const changed=selectionKey(selection)!==selectionKey(next);selection={...next};data=source;if(dialog.open)$('notification-group').textContent=groupLabel(selection);
+  const changed=selectionKey(selection)!==selectionKey(next);selection={...next};data=source;if(dialog.open){$('notification-group').textContent=groupLabel(selection);preview();}
   if(!changed||!state.settings.enabled||!supported||Notification.permission!=='granted')return;
   clearTimeout(syncTimer);const version=++syncVersion;
   syncTimer=setTimeout(()=>{pendingSync=pendingSync.catch(()=>{}).then(async()=>{if(version!==syncVersion||busy)return;try{const target={...selection};await sync(state.settings,target);persist();if(dialog.open)status(`Powiadomienia dla: ${groupLabel(target)}.`);}catch(e){if(dialog.open)status(`Nie zaktualizowano grupy. Nadal: ${groupLabel(state.syncedSelection)}. ${e.message}`,true);}});},500);
