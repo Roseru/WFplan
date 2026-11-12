@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
-import {addDays,monday,filterEvents,ics,isMethodicalEvent,isMakeupEvent,methodicalLabel} from './logic.js';
+import {addDays,monday,filterEvents,ics,isMethodicalEvent,isMakeupEvent,isReplacedEvent,methodicalLabel} from './logic.js';
 const data=JSON.parse(fs.readFileSync(new URL('./data.json',import.meta.url)));
 test('Reference example: 4pl/23kp, Friday 9 October 2026',()=>{const events=filterEvents(data.events,{semester:'winter-2026',company:23,platoon:4});const e=events.find(e=>e.date==='2026-10-09');assert.equal(e.code,'O-2/33');assert.equal(e.cell,'F413');assert.equal(e.block,'3–4');assert.equal(e.instructor,'PS');assert.equal(data.lessons[e.lesson].page,15);assert.equal(data.lessons[e.lesson].hours,2);assert.equal(data.lessons[e.lesson].type,'instruktorsko-metodyczne');assert.equal(data.lessons[e.lesson].title,'Doskonalenie umiejętności indywidualnego pokonywania toru przeszkód w OSF.');});
 test('Summer archive keeps 2026 dates, no fabricated 2027 summer',()=>{const summer=data.events.filter(e=>e.semester==='summer-2026');assert.ok(summer.length>1000);assert.ok(summer.every(e=>e.date.startsWith('2026-')));assert.equal(data.events.filter(e=>e.semester==='summer-2027').length,0);assert.ok(data.semesters.find(s=>s.id==='summer-2027').warning);});
@@ -10,13 +10,15 @@ test('Subgroups include shared entries but exclude a different subgroup',()=>{co
 test('Calendar exports all-day entries without inventing start times',()=>{const e=data.events.find(e=>e.cell==='F413'&&e.semester==='winter-2026');const output=ics([e],data);assert.match(output,/DTSTART;VALUE=DATE:20261009/);assert.match(output,/DTEND;VALUE=DATE:20261010/);assert.match(output,/TRANSP:TRANSPARENT/);assert.ok(output.split('\r\n').every(line=>Buffer.byteLength(line)<=75));assert.equal((output.match(/BEGIN:VEVENT/g)||[]).length,1);});
 
 
-test('VII semester methodical markers cover the supplied codes and only the requested group',()=>{
+test('VII semester methodical markers cover the supplied codes and all 23rd company platoons',()=>{
  for(const lesson of ['2/31','2/32','2/33','4/27','4/28','16/4','16/5']){
-  const e={semester:'winter-2026',company:23,platoon:4,lesson};
+  for(const platoon of [1,2,3,4]){
+  const e={semester:'winter-2026',company:23,platoon,lesson};
   assert.equal(isMethodicalEvent(e),true);
   assert.equal(isMethodicalEvent({...e,company:22}),false);
-  assert.equal(isMethodicalEvent({...e,platoon:3}),false);
+  assert.equal(isMethodicalEvent({...e,platoon:5}),false);
   assert.equal(isMethodicalEvent({...e,semester:'summer-2026'}),false);
+  }
  }
  assert.equal(isMethodicalEvent({semester:'winter-2026',company:23,platoon:4,lesson:'2/24'}),false);
  const actual=filterEvents(data.events,{semester:'winter-2026',company:23,platoon:4});
@@ -51,4 +53,23 @@ test('Only November 30 is marked as a methodical makeup session',()=>{
  assert.match(output,/DTSTART;VALUE=DATE:20261130/);
  assert.ok(output.includes('Doskonalenie biegu na orientację.'));
  assert.ok(!output.includes('Trening ogólnousprawniający z wykorzystaniem gier i zabaw terenowych.'));
+});
+
+test('Platoons 1–3 follow the original program without platoon 4 substitutions',()=>{
+ for(const platoon of [1,2,3]){
+  const events=filterEvents(data.events,{semester:'winter-2026',company:23,platoon});
+  assert.equal(events.filter(isMethodicalEvent).length,6);
+  for(const e of events){
+   assert.equal(isMethodicalEvent(e),data.lessons[e.lesson]?.type==='instruktorsko-metodyczne');
+   assert.equal(isMakeupEvent(e),false);
+   assert.equal(isReplacedEvent(e),false);
+  }
+  assert.equal(isMakeupEvent({semester:'winter-2026',company:23,platoon,date:'2026-11-30',lesson:'2/24'}),false);
+  assert.equal(isReplacedEvent({semester:'winter-2026',company:23,platoon,date:'2026-11-09',lesson:'2/32'}),false);
+  const exported=ics(events,data).replace(/\r\n /g,'');
+  assert.equal((exported.match(new RegExp('SUMMARY:WF · '+methodicalLabel+' · ','g'))||[]).length,6);
+  assert.ok(!exported.includes('odrabianie'));
+  assert.ok(!exported.includes('Nie odbyły się'));
+  for(const e of events.filter(isMethodicalEvent))assert.ok(exported.replaceAll('\\,',',').replaceAll('\\;',';').includes(data.lessons[e.lesson].title));
+ }
 });

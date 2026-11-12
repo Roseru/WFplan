@@ -4,11 +4,12 @@ export function monday(day){const d=new Date(day+'T12:00:00');return addDays(day
 export function filterEvents(events,s){return events.filter(e=>e.semester===s.semester&&e.company==s.company&&e.platoon==s.platoon&&(!s.subgroup||!e.subgroup||e.subgroup===s.subgroup)).sort((a,b)=>a.date.localeCompare(b.date)||parseInt(a.block)-parseInt(b.block)||a.cell.localeCompare(b.cell));}
 // VII semestr, zima 2026/2027: zielone tematy z zestawienia użytkownika.
 const methodicalLessons=new Set(['2/31','2/32','2/33','4/27','4/28','16/4','16/5']);
-const isTargetGroup=e=>e.semester==='winter-2026'&&Number(e.company)===23&&Number(e.platoon)===4;
+const isTargetCompany=e=>e.semester==='winter-2026'&&Number(e.company)===23&&[1,2,3,4].includes(Number(e.platoon));
+const isTargetGroup=e=>isTargetCompany(e)&&Number(e.platoon)===4;
 export function isReplacedEvent(e){return isTargetGroup(e)&&e.date==='2026-11-09'&&e.lesson==='2/32';}
 export const replacementTitle='Trening ogólnousprawniający z wykorzystaniem gier i zabaw terenowych.';
 export function isMakeupEvent(e){return isTargetGroup(e)&&e.date==='2026-11-30'&&e.lesson==='2/24';}
-export function isMethodicalEvent(e){return isTargetGroup(e)&&(methodicalLessons.has(e.lesson)||isMakeupEvent(e));}
+export function isMethodicalEvent(e){return isTargetCompany(e)&&(methodicalLessons.has(e.lesson)||isMakeupEvent(e));}
 export const makeupTitle='Doskonalenie biegu na orientację.';
 export const methodicalLabel='Zajęcia instruktorsko-metodyczne';
 export const methodicalEventLabel=e=>methodicalLabel+(isMakeupEvent(e)?' · odrabianie':isReplacedEvent(e)?' · Nie odbyły się':'');

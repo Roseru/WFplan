@@ -1,6 +1,6 @@
 import {locationButton,setupLocationMap} from './location-map.js';
 const closeLocationMap=setupLocationMap();
-import {iso,addDays,monday,filterEvents,ics,isMethodicalEvent,isMakeupEvent,isReplacedEvent,methodicalEventLabel,makeupTitle,replacementTitle} from './logic.js?v=20261110-nov9-blue';
+import {iso,addDays,monday,filterEvents,ics,isMethodicalEvent,isMakeupEvent,isReplacedEvent,methodicalEventLabel,makeupTitle,replacementTitle} from './logic.js?v=20261112-company23';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const dateObj=s=>new Date(s+'T12:00:00');
