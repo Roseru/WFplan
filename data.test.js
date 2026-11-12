@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
-import {addDays,monday,filterEvents,ics,isMethodicalEvent,isMakeupEvent,isReplacedEvent,methodicalLabel} from './logic.js';
+import {addDays,monday,filterEvents,ics,isMethodicalEvent,isMakeupEvent,isReplacedEvent,methodicalLabel,nextMethodicalEvent} from './logic.js';
 const data=JSON.parse(fs.readFileSync(new URL('./data.json',import.meta.url)));
 test('Reference example: 4pl/23kp, Friday 9 October 2026',()=>{const events=filterEvents(data.events,{semester:'winter-2026',company:23,platoon:4});const e=events.find(e=>e.date==='2026-10-09');assert.equal(e.code,'O-2/33');assert.equal(e.cell,'F413');assert.equal(e.block,'3–4');assert.equal(e.instructor,'PS');assert.equal(data.lessons[e.lesson].page,15);assert.equal(data.lessons[e.lesson].hours,2);assert.equal(data.lessons[e.lesson].type,'instruktorsko-metodyczne');assert.equal(data.lessons[e.lesson].title,'Doskonalenie umiejętności indywidualnego pokonywania toru przeszkód w OSF.');});
 test('Summer archive keeps 2026 dates, no fabricated 2027 summer',()=>{const summer=data.events.filter(e=>e.semester==='summer-2026');assert.ok(summer.length>1000);assert.ok(summer.every(e=>e.date.startsWith('2026-')));assert.equal(data.events.filter(e=>e.semester==='summer-2027').length,0);assert.ok(data.semesters.find(s=>s.id==='summer-2027').warning);});
@@ -72,4 +72,19 @@ test('Platoons 1–3 follow the original program without platoon 4 substitutions
   assert.ok(!exported.includes('Nie odbyły się'));
   for(const e of events.filter(isMethodicalEvent))assert.ok(exported.replaceAll('\\,',',').replaceAll('\\;',';').includes(data.lessons[e.lesson].title));
  }
+});
+
+test('Upcoming methodical card follows the selected platoon, date and actual replacements',()=>{
+ const group=platoon=>filterEvents(data.events,{semester:'winter-2026',company:23,platoon});
+ for(const [platoon,date,lesson] of [[1,'2026-11-23','2/32'],[2,'2026-11-30','2/32'],[3,'2026-11-16','2/32'],[4,'2026-11-23','16/4']]){
+  const next=nextMethodicalEvent(group(platoon),'2026-11-12');
+  assert.equal(next.date,date);
+  assert.equal(next.lesson,lesson);
+ }
+ assert.equal(nextMethodicalEvent(group(4),'2026-11-09').date,'2026-11-23');
+ assert.equal(nextMethodicalEvent(group(4),'2026-11-24').date,'2026-11-30');
+ assert.equal(isMakeupEvent(nextMethodicalEvent(group(4),'2026-11-24')),true);
+ assert.equal(nextMethodicalEvent(group(3),'2026-11-16').date,'2026-11-16');
+ assert.equal(nextMethodicalEvent(group(4),'2027-01-23'),undefined);
+ assert.equal(nextMethodicalEvent([],'2026-11-12'),undefined);
 });

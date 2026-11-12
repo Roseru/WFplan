@@ -1,5 +1,5 @@
-const CACHE='wfplan-v8-company23';
-const FILES=['./','index.html','style.css?v=20261112-company23','map.css','app.js?v=20261112-company23','logic.js?v=20261112-company23','location-map.js','campus-map.png','data.json','icon.svg','manifest.webmanifest'];
+const CACHE='wfplan-v9-next-methodical';
+const FILES=['./','index.html','style.css?v=20261112-next-methodical','map.css','app.js?v=20261112-next-methodical','logic.js?v=20261112-next-methodical','location-map.js','campus-map.png','data.json','icon.svg','manifest.webmanifest'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('wfplan-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',event=>{if(event.request.method!=='GET'||new URL(event.request.url).origin!==self.location.origin)return;event.respondWith(fetch(event.request,{cache:'no-cache'}).then(response=>{if(response.ok){const copy=response.clone();caches.open(CACHE).then(c=>c.put(event.request,copy));}return response;}).catch(()=>caches.match(event.request).then(cached=>cached||(event.request.mode==='navigate'?caches.match('./'):Response.error()))));});

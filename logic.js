@@ -10,6 +10,7 @@ export function isReplacedEvent(e){return isTargetGroup(e)&&e.date==='2026-11-09
 export const replacementTitle='Trening ogólnousprawniający z wykorzystaniem gier i zabaw terenowych.';
 export function isMakeupEvent(e){return isTargetGroup(e)&&e.date==='2026-11-30'&&e.lesson==='2/24';}
 export function isMethodicalEvent(e){return isTargetCompany(e)&&(methodicalLessons.has(e.lesson)||isMakeupEvent(e));}
+export function nextMethodicalEvent(events,fromDate){return events.find(e=>e.date>=fromDate&&isMethodicalEvent(e)&&!isReplacedEvent(e));}
 export const makeupTitle='Doskonalenie biegu na orientację.';
 export const methodicalLabel='Zajęcia instruktorsko-metodyczne';
 export const methodicalEventLabel=e=>methodicalLabel+(isMakeupEvent(e)?' · odrabianie':isReplacedEvent(e)?' · Nie odbyły się':'');
