@@ -1,6 +1,6 @@
 import {locationButton,setupLocationMap} from './location-map.js';
 const closeLocationMap=setupLocationMap();
-import {iso,addDays,monday,filterEvents,ics,isMethodicalEvent,isMakeupEvent,isReplacedEvent,methodicalEventLabel,makeupTitle,replacementTitle,nextMethodicalEvent,methodicalWarning} from './logic.js?v=20261112-im-warnings';
+import {iso,addDays,monday,filterEvents,ics,isMethodicalEvent,isMakeupEvent,isReplacedEvent,methodicalEventLabel,makeupTitle,replacementTitle,nextMethodicalEvent,methodicalWarning} from './logic.js?v=20261112-week-im';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const dateObj=s=>new Date(s+'T12:00:00');
@@ -42,7 +42,7 @@ function render(){
  $('day-label').textContent=format(day,{weekday:'long',day:'numeric',month:'long'});
  $('date').value=day;
  $('day-count').textContent=onDay.length?`${onDay.length} ${onDay.length===1?'wpis':'wpisy'}`:'Brak wpisów';
- $('week').innerHTML=Array.from({length:7},(_,i)=>{const d=addDays(start,i),count=all.filter(e=>e.date===d).length;return `<button class="${d===day?'active':''} ${d===today?'today':''}" data-day="${d}" aria-label="${esc(format(d,{weekday:'long',day:'numeric',month:'long'}))}, ${count} wpisów" aria-pressed="${d===day}"><span>${format(d,{weekday:'short'}).replace('.','')}</span><span class="number">${dateObj(d).getDate()}</span><span class="dots">${'<i class="dot"></i>'.repeat(Math.min(count,3))}</span></button>`;}).join('');
+ $('week').innerHTML=Array.from({length:7},(_,i)=>{const d=addDays(start,i),dayEvents=all.filter(e=>e.date===d),count=dayEvents.length,dayMethodical=dayEvents.find(isMethodicalEvent);const marker=dayMethodical?`<span class="week-im${isMakeupEvent(dayMethodical)?' week-im-makeup':isReplacedEvent(dayMethodical)?' week-im-replaced':''}" title="${esc(methodicalEventLabel(dayMethodical))}" aria-hidden="true">IM</span>`:'<i class="dot"></i>'.repeat(Math.min(count,3));return `<button class="${d===day?'active':''} ${d===today?'today':''}" data-day="${d}" aria-label="${esc(format(d,{weekday:'long',day:'numeric',month:'long'}))}, ${count} wpisów${dayMethodical?', '+esc(methodicalEventLabel(dayMethodical)):''}" aria-pressed="${d===day}"><span>${format(d,{weekday:'short'}).replace('.','')}</span><span class="number">${dateObj(d).getDate()}</span><span class="dots">${marker}</span></button>`;}).join('');
  $('week').querySelectorAll('button').forEach(b=>b.onclick=()=>{day=b.dataset.day;render();});
  const later=all.find(e=>e.date>day);
  $('events').innerHTML=onDay.length?onDay.map(card).join(''):`<div class="empty"><div class="empty-icon">↗</div><h3>${selection.semester==='summer-2027'?'Czekamy na nowy rozkład':'Na ten dzień nie ma wpisów'}</h3>${selection.semester==='summer-2027'?'Przesłany arkusz letni dotyczy poprzedniego roku.':day<sem.start||day>sem.end?'Ta data znajduje się poza zakresem wybranego semestru.':'Wybierz inny dzień lub przejdź do kolejnych zajęć.'}${later?'<br><button id="next-event">Przejdź do kolejnych zajęć →</button>':''}</div>`;
